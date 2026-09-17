@@ -56,3 +56,14 @@ export function cpuFlick(
     ),
   };
 }
+
+export const DESK = { left: 55, right: 845, top: 55, bottom: 485 } as const;
+/** MVP rule: equality is on the desk; strictly crossing an edge is off. */
+export function isPenOffDesk(center: Vector): boolean {
+  return (
+    center.x < DESK.left ||
+    center.x > DESK.right ||
+    center.y < DESK.top ||
+    center.y > DESK.bottom
+  );
+}

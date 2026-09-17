@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   calculateFlick,
+  isPenOffDesk,
   completeRound,
   cpuFlick,
   initialMatch,
@@ -69,5 +70,19 @@ describe('flick controls', () => {
       expect(Math.abs(Math.atan2(edge.y, edge.x))).toBeLessThanOrEqual(0.11);
       expect(edge.power).toBeLessThanOrEqual(0.85);
     }
+  });
+});
+
+describe('centre-based desk falls', () => {
+  it('keeps exact edges on the desk and detects all four strictly crossed edges', () => {
+    expect(isPenOffDesk({ x: 55, y: 55 })).toBe(false);
+    expect(isPenOffDesk({ x: 845, y: 485 })).toBe(false);
+    for (const position of [
+      { x: 54.99, y: 200 },
+      { x: 845.01, y: 200 },
+      { x: 300, y: 54.99 },
+      { x: 300, y: 485.01 },
+    ])
+      expect(isPenOffDesk(position)).toBe(true);
   });
 });

@@ -1,12 +1,10 @@
 import * as Phaser from 'phaser';
-import { ManagedPhaserGame } from '../core/managed-phaser';
-import type {
-  GameLifecycle,
-  GameMountOptions,
-} from '../core/contracts';
+import { Phaser390LifecycleGame } from '../core/phaser-390-lifecycle-game';
+import type { GameLifecycle, GameMountOptions } from '../core/contracts';
 import type { PenFightPhase, PenFightState } from './types';
 import {
   calculateFlick,
+  isPenOffDesk,
   completeRound,
   cpuFlick,
   initialMatch,
@@ -15,7 +13,6 @@ import {
   type Side,
 } from './rules';
 
-const DESK = { left: 55, right: 845, top: 55, bottom: 485 };
 class PenFightScene extends Phaser.Scene {
   private pens!: Record<Side, Phaser.Physics.Matter.Sprite>;
   private aim!: Phaser.GameObjects.Graphics;
@@ -28,10 +25,20 @@ class PenFightScene extends Phaser.Scene {
   private movingMs = 0;
   private fallen = { player: false, cpu: false };
   private message = 'Your turn. Pull back on the blue pen.';
-  constructor(private readonly report: GameMountOptions<PenFightState>['onState']) {
+  constructor(
+    private readonly report: GameMountOptions<PenFightState>['onState'],
+    private readonly reportError: (cause: unknown) => void,
+  ) {
     super('pen-fight');
   }
   create() {
+    try {
+      this.createDesk();
+    } catch (cause) {
+      this.reportError(cause);
+    }
+  }
+  private createDesk() {
     const desk = this.add.graphics();
     desk.fillStyle(0x302a24).fillRect(0, 0, 900, 540);
     desk.fillStyle(0x61442c).fillRoundedRect(48, 56, 804, 442, 12);
@@ -224,19 +231,20 @@ class PenFightScene extends Phaser.Scene {
     });
   }
   update(_time: number, delta: number) {
+    try {
+      this.stepPhysics(delta);
+    } catch (cause) {
+      this.reportError(cause);
+    }
+  }
+  private stepPhysics(delta: number) {
     if (this.phase !== 'moving') return;
     this.movingMs += delta;
     let quiet = true;
     for (const side of ['player', 'cpu'] as const) {
       const pen = this.pens[side];
       // A pen falls when its centre passes the desk edge. Fallen pens cannot return.
-      if (
-        !this.fallen[side] &&
-        (pen.x < DESK.left ||
-          pen.x > DESK.right ||
-          pen.y < DESK.top ||
-          pen.y > DESK.bottom)
-      ) {
+      if (!this.fallen[side] && isPenOffDesk(pen)) {
         this.fallen[side] = true;
         pen
           .setVisible(false)
@@ -244,10 +252,11 @@ class PenFightScene extends Phaser.Scene {
           .setVelocity(0, 0)
           .setAngularVelocity(0);
       }
-      const body = pen.body as MatterJS.BodyType;
+      const velocity = pen.getVelocity();
       if (
         !this.fallen[side] &&
-        (body.speed > 0.12 || Math.abs(body.angularVelocity) > 0.008)
+        (Math.hypot(velocity.x, velocity.y) > 0.12 ||
+          Math.abs(pen.getAngularVelocity()) > 0.008)
       )
         quiet = false;
     }
@@ -280,9 +289,21 @@ class PenFightScene extends Phaser.Scene {
     }
   }
 }
-export function mount({ parent, onState }: GameMountOptions<PenFightState>): GameLifecycle {
-  const scene = new PenFightScene(onState);
-  const game = new ManagedPhaserGame({
+export function mount({
+  parent,
+  onState,
+  onError,
+}: GameMountOptions<PenFightState>): GameLifecycle {
+  let destroyed = false;
+  const scene = new PenFightScene(
+    (state) => {
+      if (!destroyed) onState(state);
+    },
+    (cause) => {
+      if (!destroyed) onError?.(cause);
+    },
+  );
+  const game = new Phaser390LifecycleGame({
     type: Phaser.AUTO,
     parent,
     width: 900,
@@ -298,18 +319,29 @@ export function mount({ parent, onState }: GameMountOptions<PenFightState>): Gam
     render: { antialias: true },
     audio: { noAudio: true },
   });
-  const resize = new ResizeObserver(() => game.scale.refresh());
-  resize.observe(parent);
-  let destroyed = false;
+  let resize: ResizeObserver | undefined;
+  const destroy = () => {
+    if (destroyed) return;
+    destroyed = true;
+    resize?.disconnect();
+    // Stop simulation now; engine destruction is documented as next-frame work.
+    for (const active of game.scene.getScenes(true)) game.scene.stop(active);
+    game.canvas?.remove();
+    game.destroy(true);
+  };
+  try {
+    resize = new ResizeObserver(() => {
+      if (!destroyed && game.isBooted) game.scale.refresh();
+    });
+    resize.observe(parent);
+  } catch (cause) {
+    destroy();
+    throw cause;
+  }
   return {
     restart: () => {
       if (!destroyed && scene.sys.isActive()) scene.restartMatch();
     },
-    destroy: () => {
-      if (destroyed) return;
-      destroyed = true;
-      resize.disconnect();
-      game.destroy(true);
-    },
+    destroy,
   };
 }
