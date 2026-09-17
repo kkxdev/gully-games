@@ -10,7 +10,11 @@ export function PenFightScoreboard({ state }: { state: PenFightState | null }) {
       </div>
       <div className="round">
         <span>BEST OF FIVE</span>
-        <strong>Round {state?.round ?? 1}</strong>
+        <strong>
+          {state?.phase === 'match-over'
+            ? 'Final score'
+            : `Round ${state?.round ?? 1}`}
+        </strong>
         <small>First to 3 · draws replay</small>
       </div>
       <div className="score cpu">

@@ -1,0 +1,238 @@
+.game-shell {
+  position: relative;
+}
+.pen-match-result {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  padding: 22px;
+  background: #202c27e8;
+  backdrop-filter: blur(4px);
+}
+.pen-result-card {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 380px);
+  padding: 24px;
+  text-align: center;
+  background: #fffbed;
+  color: #284d40;
+  border: 1px solid #dbd1b7;
+  border-radius: 8px;
+  box-shadow: 0 16px 44px #0004;
+  animation: pen-result-enter 0.3s ease-out;
+}
+.pen-result-art {
+  height: 66px;
+  display: grid;
+  place-items: center;
+}
+.pen-win-star {
+  color: #bd862c;
+  font-size: 66px;
+  line-height: 1;
+}
+.fallen-pen {
+  width: 100px;
+  height: 66px;
+  color: #b34e32;
+}
+.pen-match-loss .fallen-pen-body {
+  animation: pen-drop 0.5s ease-out;
+}
+.pen-result-eyebrow {
+  font: 10px monospace;
+  letter-spacing: 1.5px;
+  margin: 12px 0;
+}
+.pen-match-loss .pen-result-eyebrow {
+  color: #a34a35;
+}
+.pen-result-card h3 {
+  font:
+    bold clamp(26px, 4vw, 36px)/1.1 Georgia,
+    serif;
+  margin: 0 0 12px;
+}
+.pen-result-card > p:not(.pen-result-eyebrow) {
+  font-size: 14px;
+  line-height: 1.6;
+  margin: 0;
+}
+.pen-result-score {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  padding: 18px 0;
+  font-size: 13px;
+}
+.pen-result-score strong {
+  font:
+    bold 32px Georgia,
+    serif;
+  padding: 0 6px;
+}
+.pen-result-card button {
+  width: 100%;
+  min-height: 48px;
+  border: 0;
+  border-radius: 4px;
+  background: #284d40;
+  color: #fffbed;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.pen-result-card button:disabled {
+  opacity: 0.5;
+}
+.pen-result-card button:focus-visible {
+  outline: 3px solid #d99b38;
+  outline-offset: 4px;
+}
+.pen-round-feedback {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px;
+  overflow: hidden;
+  background: #302a24c9;
+  color: #fffbed;
+  text-align: center;
+  pointer-events: none;
+}
+.pen-round-feedback strong {
+  font:
+    bold clamp(22px, 4vw, 36px) Georgia,
+    serif;
+  z-index: 1;
+}
+.pen-round-feedback > span {
+  font-size: 13px;
+  z-index: 1;
+}
+.pen-round-player strong {
+  color: #ffde88;
+}
+.pen-round-cpu strong {
+  color: #ffc2a9;
+}
+.pen-confetti {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.pen-confetti span {
+  position: absolute;
+  top: -20px;
+  width: 8px;
+  height: 14px;
+  opacity: 0;
+  animation: pen-confetti-fall 3s ease-in both;
+}
+@keyframes pen-confetti-fall {
+  0% {
+    opacity: 1;
+    transform: translate3d(-15px, -20px, 0) rotate(0deg);
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(45px, 650px, 0) rotate(520deg);
+  }
+}
+@keyframes pen-result-enter {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+@keyframes pen-drop {
+  from {
+    transform: rotate(-12deg);
+  }
+  to {
+    transform: rotate(0);
+  }
+}
+@media (max-width: 520px) {
+  .game-status {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 12px;
+  }
+  .game-status p {
+    font-size: 13px;
+    line-height: 1.5;
+    min-height: 20px;
+  }
+  .game-status button {
+    background: #284d40;
+    color: #fffbed;
+    border: 0;
+    min-height: 44px;
+    font-size: 13px;
+    font-weight: 700;
+  }
+  .power-row {
+    padding: 2px 12px 0;
+    font-size: 10px;
+  }
+  .control-note {
+    padding: 0 12px 4px;
+    font-size: 11px;
+    line-height: 1.6;
+  }
+  .control-note span {
+    margin-top: 4px;
+    font-size: 10px;
+  }
+  .pen-match-result {
+    padding: 16px;
+  }
+  .pen-result-card {
+    padding: 20px 16px;
+  }
+  .pen-result-card h3 {
+    font-size: 28px;
+  }
+  .pen-result-card > p:not(.pen-result-eyebrow) {
+    font-size: 13px;
+  }
+  .pen-result-score {
+    padding: 16px 0;
+  }
+  .pen-result-eyebrow {
+    font-size: 9px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pen-confetti {
+    display: none;
+  }
+  .pen-result-card,
+  .pen-match-loss .fallen-pen-body {
+    animation: none;
+  }
+}
+.pen-round-feedback .fallen-pen {
+  width: 75px;
+  height: 44px;
+  color: #ffc2a9;
+}

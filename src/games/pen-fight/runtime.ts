@@ -11,6 +11,7 @@ import {
   roundOutcome,
   type Match,
   type Side,
+  type RoundOutcome,
 } from './rules';
 
 class PenFightScene extends Phaser.Scene {
@@ -24,6 +25,7 @@ class PenFightScene extends Phaser.Scene {
   private quietMs = 0;
   private movingMs = 0;
   private fallen = { player: false, cpu: false };
+  private roundResult: RoundOutcome | undefined;
   private message = 'Your turn. Pull back on the blue pen.';
   constructor(
     private readonly report: GameMountOptions<PenFightState>['onState'],
@@ -129,6 +131,7 @@ class PenFightScene extends Phaser.Scene {
       round: this.match.round,
       turn: this.turn,
       phase: this.phase,
+      roundResult: this.roundResult,
       power: this.power,
       message: this.message,
       ...(this.match.winner
@@ -147,6 +150,7 @@ class PenFightScene extends Phaser.Scene {
     this.resetRound();
   }
   private resetRound() {
+    this.roundResult = undefined;
     this.cancelAim();
     this.fallen = { player: false, cpu: false };
     for (const side of ['player', 'cpu'] as const) {
@@ -267,6 +271,7 @@ class PenFightScene extends Phaser.Scene {
     const outcome = roundOutcome(this.fallen.player, this.fallen.cpu);
     if (outcome) {
       const finishedRound = this.match.round;
+      this.roundResult = outcome;
       this.match = completeRound(this.match, outcome);
       this.phase = this.match.winner ? 'match-over' : 'round-over';
       this.message = this.match.winner
