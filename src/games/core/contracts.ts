@@ -6,7 +6,7 @@ export interface Player {
 export type Score = Record<string, number>;
 export interface GameResult {
   winner: string | null;
-  scores: Score;
+  scores?: Score;
 }
 export interface GameSession {
   id: string;
@@ -25,19 +25,24 @@ export interface GameLifecycle {
   destroy(): void;
   restart(): void;
 }
-export interface GameState {
-  scores: Score;
-  round: number;
-  turn: string;
-  phase: 'aiming' | 'moving' | 'round-over' | 'match-over';
-  power: number;
-  message: string;
+/** Lifecycle state only. Each game owns its simulation and presentation fields. */
+export type GameStatus = 'ready' | 'playing' | 'completed' | 'error';
+export interface BaseGameState {
+  status: GameStatus;
   result?: GameResult;
 }
-export interface GameMountOptions {
+export interface GameMountOptions<
+  TState extends BaseGameState = BaseGameState,
+> {
   parent: HTMLElement;
-  onState: (state: GameState) => void;
+  onState: (state: TState) => void;
+  onError?: (cause: unknown) => void;
 }
-export interface GameDefinition extends GameMetadata {
-  load?: () => Promise<{ mount: (options: GameMountOptions) => GameLifecycle }>;
+export interface GameRuntime<TState extends BaseGameState = BaseGameState> {
+  mount(options: GameMountOptions<TState>): GameLifecycle;
+}
+export interface GameDefinition<
+  TState extends BaseGameState = BaseGameState,
+> extends GameMetadata {
+  loadRuntime: () => Promise<GameRuntime<TState>>;
 }

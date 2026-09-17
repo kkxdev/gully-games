@@ -1,4 +1,4 @@
-import { GameHost } from '@/components/game-host';
+import { GameLauncher } from '@/components/game-launcher';
 import { gameCatalog } from '@/games/catalog';
 import Link from 'next/link';
 export default function Home() {
@@ -41,36 +41,7 @@ export default function Home() {
       {games
         .filter((game) => game.status === 'playable')
         .map((game) => (
-          <div key={game.id} className="play-layout">
-            <div className="game-main">
-              <div className="game-title">
-                <h2>{game.name}</h2>
-                <span className="live-label">● READY TO PLAY</span>
-              </div>
-              <GameHost gameId={game.id} />
-            </div>
-            <aside className="notebook">
-              <span className="paper-tab">THE RULES</span>
-              <h3>
-                Settle it
-                <br />
-                on the desk.
-              </h3>
-              <p>{game.description}</p>
-              <ol>
-                <li>Pull your blue pen backward.</li>
-                <li>Aim the arrow at the red pen.</li>
-                <li>Release to flick. Knock it off!</li>
-              </ol>
-              <p className="margin-note">
-                Keep yours on the desk.
-                <br />
-                First to 3 wins. ✎
-              </p>
-              <div className="desk-doodle">──── ✒ ────</div>
-              <small>For fingers, mice & fierce rivals.</small>
-            </aside>
-          </div>
+          <GameLauncher key={game.id} gameId={game.id} />
         ))}
       <section className="neighbourhood">
         <div className="roadmap-heading">

@@ -1,81 +1,72 @@
 'use client';
-import { gameRegistry } from '@/games/registry';
 import { useEffect, useRef, useState } from 'react';
-import type { GameLifecycle, GameState } from '@/games/core/contracts';
-function getDefinition(id: string) {
-  const definition = gameRegistry.get(id);
-  if (!definition) throw new Error(`Unknown game: ${id}`);
-  return definition;
+import type { BaseGameState } from '@/games/core/contracts';
+import type { ReactGameDefinition } from '@/games/core/game-ui';
+import {
+  createRuntimeController,
+  type GameHostError,
+} from '@/games/core/runtime-controller';
+
+interface HostState<TState> {
+  state: TState | null;
+  phase: 'loading' | 'ready' | 'error';
+  error?: GameHostError;
 }
-export function GameHost({ gameId }: { gameId: string }) {
-  const definition = getDefinition(gameId);
+/** The registered component keys this host by game identity. It knows no game rules. */
+export function GameHost<TState extends BaseGameState>({
+  definition,
+}: {
+  definition: ReactGameDefinition<TState>;
+}) {
   const parent = useRef<HTMLDivElement>(null);
-  const runtime = useRef<GameLifecycle | null>(null);
-  const [state, setState] = useState<GameState | null>(null);
-  const [error, setError] = useState(false);
+  const controller = useRef<ReturnType<
+    typeof createRuntimeController<TState>
+  > | null>(null);
+  const [host, setHost] = useState<HostState<TState>>({
+    state: null,
+    phase: 'loading',
+  });
   useEffect(() => {
-    let disposed = false;
-    definition
-      .load?.()
-      .then(({ mount }) => {
-        if (disposed || !parent.current) return;
-        runtime.current = mount({
-          parent: parent.current,
-          onState: (next) => {
-            if (!disposed) setState(next);
-          },
-        });
-      })
-      .catch(() => {
-        if (!disposed) setError(true);
-      });
+    if (!parent.current) return;
+    const owned = createRuntimeController({
+      parent: parent.current,
+      loadRuntime: definition.loadRuntime,
+      onState: (state) => setHost((previous) => ({ ...previous, state })),
+      onReady: () => setHost((previous) => ({ ...previous, phase: 'ready' })),
+      onError: (error) => {
+        if (process.env.NODE_ENV !== 'production')
+          console.error(
+            `Game ${definition.id} failed during ${error.phase}`,
+            error.cause,
+          );
+        setHost((previous) => ({ ...previous, phase: 'error', error }));
+      },
+    });
+    controller.current = owned;
     return () => {
-      disposed = true;
-      runtime.current?.destroy();
-      runtime.current = null;
+      owned.destroy();
+      if (controller.current === owned) controller.current = null;
     };
   }, [definition]);
+  const Presentation = definition.Presentation;
   return (
-    <section className="game-shell" aria-label={`${definition.name} game`}>
-      <div className="scoreboard">
-        <div className="score player">
-          <span>YOU / BLUE</span>
-          <strong>{state?.scores.player ?? 0}</strong>
-        </div>
-        <div className="round">
-          <span>BEST OF FIVE</span>
-          <strong>Round {state?.round ?? 1}</strong>
-          <small>First to 3 · draws replay</small>
-        </div>
-        <div className="score cpu">
-          <span>CPU / RED</span>
-          <strong>{state?.scores.cpu ?? 0}</strong>
-        </div>
-      </div>
+    <Presentation
+      state={host.state}
+      restart={() => controller.current?.restart()}
+      canRestart={host.phase === 'ready'}
+    >
       <div
-        className="canvas-wrap"
+        className="runtime-mount"
         ref={parent}
-        aria-label="School desk. Drag your blue pen backward and release to flick."
+        aria-label={`${definition.name} play area`}
       />
-      <div className="game-status">
-        <p role="status" aria-live="polite">
-          {error
-            ? 'The desk could not load. Please refresh to try again.'
-            : (state?.message ?? 'Setting up your desk…')}
+      {host.phase !== 'ready' && (
+        <p className="host-notice" role="status" aria-live="polite">
+          {host.phase === 'error'
+            ? 'This game could not start or continue. Please refresh to try again.'
+            : `Loading ${definition.name}…`}
         </p>
-        <button onClick={() => runtime.current?.restart()} disabled={!state}>
-          ↻ Restart match
-        </button>
-      </div>
-      <div className="power-row">
-        <label htmlFor="power">FLICK POWER</label>
-        <meter id="power" min="0" max="1" value={state?.power ?? 0} />
-        <span>{Math.round((state?.power ?? 0) * 100)}%</span>
-      </div>
-      <p className="control-note">
-        Grab the blue pen → pull backward to aim → let go!{' '}
-        <span>Touch & mouse · Esc cancels aim</span>
-      </p>
-    </section>
+      )}
+    </Presentation>
   );
 }

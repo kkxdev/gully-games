@@ -1,10 +1,8 @@
+import { registerGame } from '../components/register-game';
 import { createGameRegistry } from './core/registry';
 import { gameCatalog } from './catalog';
-export const gameRegistry = createGameRegistry(
-  gameCatalog.map((game) => ({
-    ...game,
-    ...(game.id === 'pen-fight'
-      ? { load: () => import('./pen-fight/runtime') }
-      : {}),
-  })),
-);
+import { penFightDefinition } from './pen-fight/definition';
+export const gameRegistry = createGameRegistry([
+  registerGame(penFightDefinition),
+  ...gameCatalog.filter((game) => game.status === 'planned'),
+]);

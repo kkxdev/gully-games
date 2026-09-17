@@ -1,13 +1,7 @@
 import type { GameMetadata } from './core/contracts';
+import { penFightMetadata } from './pen-fight/metadata';
 export const gameCatalog: readonly GameMetadata[] = [
-  {
-    id: 'pen-fight',
-    name: 'Pen Fight',
-    description: 'One desk. Two pens. A very serious lunch-break rivalry.',
-    players: '1 vs CPU',
-    location: 'School desk',
-    status: 'playable',
-  },
+  penFightMetadata,
   {
     id: 'kanche',
     name: 'Kanche',

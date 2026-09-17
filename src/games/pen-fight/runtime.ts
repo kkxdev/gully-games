@@ -3,8 +3,8 @@ import { ManagedPhaserGame } from '../core/managed-phaser';
 import type {
   GameLifecycle,
   GameMountOptions,
-  GameState,
 } from '../core/contracts';
+import type { PenFightPhase, PenFightState } from './types';
 import {
   calculateFlick,
   completeRound,
@@ -21,14 +21,14 @@ class PenFightScene extends Phaser.Scene {
   private aim!: Phaser.GameObjects.Graphics;
   private match: Match = initialMatch();
   private turn: Side = 'player';
-  private phase: GameState['phase'] = 'aiming';
+  private phase: PenFightPhase = 'aiming';
   private dragging: number | null = null;
   private power = 0;
   private quietMs = 0;
   private movingMs = 0;
   private fallen = { player: false, cpu: false };
   private message = 'Your turn. Pull back on the blue pen.';
-  constructor(private readonly report: GameMountOptions['onState']) {
+  constructor(private readonly report: GameMountOptions<PenFightState>['onState']) {
     super('pen-fight');
   }
   create() {
@@ -117,6 +117,7 @@ class PenFightScene extends Phaser.Scene {
   }
   private emit() {
     this.report({
+      status: this.match.winner ? 'completed' : 'playing',
       scores: { ...this.match.scores },
       round: this.match.round,
       turn: this.turn,
@@ -279,7 +280,7 @@ class PenFightScene extends Phaser.Scene {
     }
   }
 }
-export function mount({ parent, onState }: GameMountOptions): GameLifecycle {
+export function mount({ parent, onState }: GameMountOptions<PenFightState>): GameLifecycle {
   const scene = new PenFightScene(onState);
   const game = new ManagedPhaserGame({
     type: Phaser.AUTO,
