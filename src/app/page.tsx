@@ -22,8 +22,7 @@ export default function Home() {
           </h1>
           <p className="intro-copy">
             Back benches. Borrowed pens. One last game before home.
-            <br />
-            Welcome back to the games we grew up with.
+            <br /> Welcome back to the games we grew up with.
           </p>
         </div>
         <div className="stamp">

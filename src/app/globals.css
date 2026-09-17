@@ -505,3 +505,73 @@ footer > span:first-child {
   font-size: 14px;
   text-align: center;
 }
+
+@media (max-width: 520px) {
+  .masthead {
+    min-height: 60px;
+  }
+  .brand-caption,
+  .school-tag {
+    display: none;
+  }
+  .brand-mark {
+    width: 34px;
+    height: 34px;
+    font-size: 23px;
+  }
+  .brand {
+    font-size: 21px;
+    gap: 9px;
+  }
+  .intro {
+    padding: 16px 0 12px;
+  }
+  .intro .eyebrow {
+    font-size: 8px;
+    letter-spacing: 1.2px;
+    margin: 0;
+  }
+  h1 {
+    font-size: clamp(30px, 8.5vw, 40px);
+    letter-spacing: -1px;
+    margin: 10px 0;
+  }
+  .intro-copy {
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.5;
+  }
+  .intro-copy br {
+    display: none;
+  }
+  .location-bar {
+    padding: 11px 0;
+    font-size: 9px;
+  }
+  .location-bar span:last-child {
+    display: none;
+  }
+  .play-layout {
+    margin: 14px 0 26px;
+  }
+  .game-title {
+    margin-bottom: 10px;
+  }
+  .game-title h2 {
+    font-size: 25px;
+  }
+  .live-label {
+    font-size: 8px;
+  }
+  .scoreboard {
+    padding: 10px 12px;
+  }
+  .score span,
+  .round span {
+    font-size: 9px;
+    letter-spacing: 0.5px;
+  }
+  .coming-games {
+    gap: 12px;
+  }
+}
