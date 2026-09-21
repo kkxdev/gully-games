@@ -11,7 +11,9 @@ import type {
   GamePresentationProps,
   ReactGameDefinition,
 } from '../games/core/game-ui';
+import { trackEvent } from '@/lib/analytics';
 import { GameHost } from './game-host';
+vi.mock('@/lib/analytics', () => ({ trackEvent: vi.fn() }));
 interface WordState extends BaseGameState {
   word: string;
 }
@@ -67,6 +69,7 @@ beforeEach(() => {
   container = document.createElement('div');
   document.body.appendChild(container);
   root = createRoot(container);
+  vi.mocked(trackEvent).mockClear();
 });
 afterEach(async () => {
   await act(async () => root.unmount());
@@ -141,5 +144,54 @@ describe('generic React host', () => {
     expect(container.querySelectorAll('canvas')).toHaveLength(0);
     expect(container.querySelector('button')?.disabled).toBe(true);
     expect(f.lifecycle.destroy).toHaveBeenCalledOnce();
+  });
+});
+describe('GA4 lifecycle tracking', () => {
+  it('reports readiness, match start, completion and a rematch restart', async () => {
+    const f = fixture();
+    await act(async () => root.render(<GameHost definition={f.definition} />));
+    expect(trackEvent).toHaveBeenCalledWith('game_ready', {
+      game_id: 'word-test',
+      game_name: 'Word Test',
+    });
+    expect(trackEvent).toHaveBeenCalledWith('game_start', {
+      game_id: 'word-test',
+      game_name: 'Word Test',
+    });
+    await act(async () =>
+      f.callbacks()?.onState({ status: 'completed', word: 'school' }),
+    );
+    expect(trackEvent).toHaveBeenCalledWith('game_complete', {
+      game_id: 'word-test',
+      game_name: 'Word Test',
+      result: null,
+    });
+    await act(async () => container.querySelector('button')?.click());
+    expect(trackEvent).toHaveBeenCalledWith('game_restart', {
+      game_id: 'word-test',
+      game_name: 'Word Test',
+      trigger: 'rematch',
+    });
+  });
+  it('reports a mid-match trigger when restarting before the game completes', async () => {
+    const f = fixture();
+    await act(async () => root.render(<GameHost definition={f.definition} />));
+    await act(async () => container.querySelector('button')?.click());
+    expect(trackEvent).toHaveBeenCalledWith('game_restart', {
+      game_id: 'word-test',
+      game_name: 'Word Test',
+      trigger: 'mid_match',
+    });
+  });
+  it('reports a game_error event alongside the console diagnostic', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    const f = fixture();
+    await act(async () => root.render(<GameHost definition={f.definition} />));
+    await act(async () => f.callbacks()?.onError?.('failed'));
+    expect(trackEvent).toHaveBeenCalledWith('game_error', {
+      game_id: 'word-test',
+      game_name: 'Word Test',
+      error_phase: 'runtime',
+    });
   });
 });

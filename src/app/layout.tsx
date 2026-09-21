@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
+import { GoogleAnalytics } from '@/components/google-analytics';
 import { ServiceWorker } from '@/components/service-worker';
 export const metadata: Metadata = {
   title: 'Gully Games — The bell can wait.',
@@ -25,6 +26,7 @@ export default function RootLayout({
       <body>
         {children}
         <ServiceWorker />
+        <GoogleAnalytics />
       </body>
     </html>
   );

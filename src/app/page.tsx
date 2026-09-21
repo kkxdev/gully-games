@@ -1,29 +1,23 @@
-import { GameLauncher } from '@/components/game-launcher';
-import { gameCatalog } from '@/games/catalog';
 import Link from 'next/link';
+import { PageShell } from '@/components/site-shell';
+import { gameCatalog } from '@/games/catalog';
+
 export default function Home() {
-  const games = gameCatalog;
   return (
-    <main>
-      <header className="masthead">
-        <Link href="/" className="brand">
-          <span className="brand-mark">gg</span>Gully Games
-          <span className="brand-caption">EST. IN OUR CHILDHOOD</span>
-        </Link>
-        <span className="school-tag">
-          AFTER SCHOOL CLUB <span>●</span>
-        </span>
-      </header>
-      <div className="intro">
+    <PageShell>
+      <section className="intro neighbourhood-intro">
         <div>
           <p className="eyebrow">THE NEIGHBOURHOOD · CHAPTER 01</p>
           <h1>
             The bell <em>can wait.</em>
           </h1>
           <p className="intro-copy">
-            Back benches. Borrowed pens. One last game before home.
-            <br /> Welcome back to the games we grew up with.
+            The school desk you remember, waiting for one more match with an old
+            friend.
           </p>
+          <Link className="primary-action inline-action" href="/school">
+            Enter the school →
+          </Link>
         </div>
         <div className="stamp">
           NO BATTERIES
@@ -32,43 +26,31 @@ export default function Home() {
           <br />
           REQUIRED ✳
         </div>
-      </div>
-      <div className="location-bar">
-        <span>⌂ THE SCHOOL DESK</span>
-        <span>Lunch break, sometime in the ’90s</span>
-      </div>
-      {games
-        .filter((game) => game.status === 'playable')
-        .map((game) => (
-          <GameLauncher key={game.id} gameId={game.id} />
-        ))}
-      <section className="neighbourhood">
-        <div className="roadmap-heading">
-          <div>
-            <p className="eyebrow">MORE MEMORIES, SAME MOHALLA</p>
-            <h2>Around the corner</h2>
-          </div>
-          <span>The neighbourhood is growing.</span>
-        </div>
-        <div className="coming-games">
-          {games
-            .filter((game) => game.status === 'planned')
-            .map((game, i) => (
-              <article key={game.id}>
-                <span className="game-number">0{i + 2}</span>
-                <p className="eyebrow">{game.location}</p>
-                <h3>{game.name}</h3>
-                <p>{game.description}</p>
-                <span className="coming-label">COMING LATER</span>
-              </article>
-            ))}
-        </div>
       </section>
-      <footer>
-        <span>Gully Games</span>
-        <p>Made for the kid who never wanted to go home.</p>
-        <span>PLAY. REPEAT. REMEMBER.</span>
-      </footer>
-    </main>
+      <section className="chapter-grid" aria-label="Neighbourhood chapters">
+        <Link href="/school" className="chapter-card chapter-open">
+          <span className="game-number">01</span>
+          <p className="eyebrow">OPEN NOW · SCHOOL DESK</p>
+          <h2>Pen Fight</h2>
+          <p>Borrowed pens. Scratched initials. First to three wins.</p>
+          <strong>Lunch break, 1994 →</strong>
+        </Link>
+        {gameCatalog
+          .filter((game) => game.status === 'planned')
+          .map((game, index) => (
+            <article
+              className="chapter-card"
+              key={game.id}
+              aria-label={`${game.name}, coming later`}
+            >
+              <span className="game-number">0{index + 2}</span>
+              <p className="eyebrow">{game.location}</p>
+              <h2>{game.name}</h2>
+              <p>{game.description}</p>
+              <span className="coming-label">COMING LATER</span>
+            </article>
+          ))}
+      </section>
+    </PageShell>
   );
 }

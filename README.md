@@ -1,6 +1,8 @@
 # Gully Games
 
-A neighbourhood of Indian childhood games from the 1980s and 1990s. Start at the school desk with **Pen Fight**, a playable solo match against the CPU. The future lobby connects the school, gully, playground and rooftop.
+A neighbourhood of Indian childhood games from the 1980s and 1990s. Enter the
+School Desk to create a challenge invitation or play **Pen Fight** against the
+CPU. Realtime room service is explicitly still in development.
 
 ## Development
 
@@ -11,7 +13,9 @@ npm install
 npm run dev
 ```
 
-Open http://localhost:3000. Pull back from the blue pen and release to flick. Touch and mouse work; Esc cancels aiming. Knock the red pen off while keeping yours on the desk. First to three wins. Draws replay, and starting turns alternate by decisive round.
+Open http://localhost:3000. Routes are the neighbourhood, school, CPU practice,
+and room-code lobby. Pull back from the blue pen and release to flick in
+practice. Touch and mouse work; Esc cancels aiming.
 
 ```sh
 npm run build
@@ -40,7 +44,10 @@ Each typed definition pairs a runtime with its own React presentation; the regis
 
 Serve production on HTTPS (localhost works) to install where supported. The manifest, PNG icons and service worker provide a standalone foundation. A visit after the worker controls the page caches the shell and loaded immutable assets for offline rematches. First-ever offline visits show a fallback. Development does not register the worker. Updates wait naturally to avoid interrupting matches; clear site data when debugging old production caches.
 
-See [vision](docs/product-vision.md), [architecture](docs/architecture.md), [roadmap](docs/game-roadmap.md) and [adding a game](docs/adding-a-game.md).
+See [social alpha specification](docs/social-alpha-spec.md),
+[delivery tracker](docs/social-alpha-tracker.md), [vision](docs/product-vision.md),
+[architecture](docs/architecture.md), [roadmap](docs/game-roadmap.md) and
+[adding a game](docs/adding-a-game.md).
 
 ## Verification
 

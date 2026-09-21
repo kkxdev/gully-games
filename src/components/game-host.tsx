@@ -6,6 +6,7 @@ import {
   createRuntimeController,
   type GameHostError,
 } from '@/games/core/runtime-controller';
+import { trackEvent } from '@/lib/analytics';
 
 interface HostState<TState> {
   state: TState | null;
@@ -28,12 +29,40 @@ export function GameHost<TState extends BaseGameState>({
   });
   useEffect(() => {
     if (!parent.current) return;
+    let previousStatus: BaseGameState['status'] | null = null;
     const owned = createRuntimeController({
       parent: parent.current,
       loadRuntime: definition.loadRuntime,
-      onState: (state) => setHost((previous) => ({ ...previous, state })),
-      onReady: () => setHost((previous) => ({ ...previous, phase: 'ready' })),
+      onState: (state) => {
+        if (state.status !== previousStatus) {
+          if (state.status === 'playing')
+            trackEvent('game_start', {
+              game_id: definition.id,
+              game_name: definition.name,
+            });
+          else if (state.status === 'completed')
+            trackEvent('game_complete', {
+              game_id: definition.id,
+              game_name: definition.name,
+              result: state.result?.winner ?? null,
+            });
+          previousStatus = state.status;
+        }
+        setHost((previous) => ({ ...previous, state }));
+      },
+      onReady: () => {
+        trackEvent('game_ready', {
+          game_id: definition.id,
+          game_name: definition.name,
+        });
+        setHost((previous) => ({ ...previous, phase: 'ready' }));
+      },
       onError: (error) => {
+        trackEvent('game_error', {
+          game_id: definition.id,
+          game_name: definition.name,
+          error_phase: error.phase,
+        });
         if (process.env.NODE_ENV !== 'production')
           console.error(
             `Game ${definition.id} failed during ${error.phase}`,
@@ -52,7 +81,14 @@ export function GameHost<TState extends BaseGameState>({
   return (
     <Presentation
       state={host.state}
-      restart={() => controller.current?.restart()}
+      restart={() => {
+        trackEvent('game_restart', {
+          game_id: definition.id,
+          game_name: definition.name,
+          trigger: host.state?.status === 'completed' ? 'rematch' : 'mid_match',
+        });
+        controller.current?.restart();
+      }}
       canRestart={host.phase === 'ready'}
     >
       <div

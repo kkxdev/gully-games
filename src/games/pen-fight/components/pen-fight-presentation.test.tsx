@@ -2,8 +2,10 @@
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
+import { trackEvent } from '@/lib/analytics';
 import type { PenFightState } from '../types';
 import { PenFightPresentation } from './pen-fight-presentation';
+vi.mock('@/lib/analytics', () => ({ trackEvent: vi.fn() }));
 let root: Root, container: HTMLDivElement;
 beforeEach(() => {
   Object.defineProperty(globalThis, 'IS_REACT_ACT_ENVIRONMENT', {
@@ -13,6 +15,7 @@ beforeEach(() => {
   container = document.createElement('div');
   document.body.appendChild(container);
   root = createRoot(container);
+  vi.mocked(trackEvent).mockClear();
 });
 afterEach(async () => {
   await act(async () => root.unmount());
@@ -106,4 +109,32 @@ it('shows domain-typed round outcomes without interrupting automatic round progr
           : 'Draw!',
     );
   }
+});
+it('reports a round_complete GA4 event once per resolved round', async () => {
+  const over: PenFightState = {
+    ...playing,
+    phase: 'round-over',
+    roundResult: 'player',
+  };
+  const render = (state: PenFightState) => (
+    <PenFightPresentation state={state} restart={() => {}} canRestart>
+      <div />
+    </PenFightPresentation>
+  );
+  await act(async () => root.render(render(over)));
+  expect(trackEvent).toHaveBeenCalledOnce();
+  expect(trackEvent).toHaveBeenCalledWith('round_complete', {
+    game_id: 'pen-fight',
+    round: 1,
+    outcome: 'player',
+  });
+  await act(async () => root.render(render(over)));
+  expect(trackEvent).toHaveBeenCalledOnce();
+  await act(async () => root.render(render({ ...over, round: 2 })));
+  expect(trackEvent).toHaveBeenCalledTimes(2);
+  expect(trackEvent).toHaveBeenLastCalledWith('round_complete', {
+    game_id: 'pen-fight',
+    round: 2,
+    outcome: 'player',
+  });
 });

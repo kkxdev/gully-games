@@ -1,4 +1,6 @@
+import { useEffect, useRef } from 'react';
 import type { GamePresentationProps } from '../../core/game-ui';
+import { trackEvent } from '@/lib/analytics';
 import { penFightMetadata } from '../metadata';
 import type { PenFightState } from '../types';
 import { PenFightHUD, PenFightScoreboard } from './pen-fight-hud';
@@ -11,6 +13,18 @@ export function PenFightPresentation({
   children,
 }: GamePresentationProps<PenFightState>) {
   const completed = state?.phase === 'match-over';
+  const trackedRound = useRef<string | null>(null);
+  useEffect(() => {
+    if (state?.phase !== 'round-over' || !state.roundResult) return;
+    const key = `${state.round}-${state.roundResult}`;
+    if (trackedRound.current === key) return;
+    trackedRound.current = key;
+    trackEvent('round_complete', {
+      game_id: penFightMetadata.id,
+      round: state.round,
+      outcome: state.roundResult,
+    });
+  }, [state?.phase, state?.round, state?.roundResult]);
   return (
     <div className="play-layout">
       <div className="game-main">
